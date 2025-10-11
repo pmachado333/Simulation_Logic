@@ -6,16 +6,23 @@
   <title>Simulation Logic input generator - FDPlan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{--slb-900:#001a5e;--slb-800:#002d84;--slb-700:#003aa8;--slb-600:#175cd3;--slb-100:#e7eefc;--ink-900:#0b1220;--ink-700:#233047;--ink-500:#4b5b79;--line:#d7dff2;--white:#fff}
+    :root{
+      --slb-900:#001a5e;--slb-800:#002d84;--slb-700:#003aa8;--slb-600:#175cd3;--slb-100:#e7eefc;
+      --ink-900:#0b1220;--ink-700:#233047;--ink-600:#2e3c55;--ink-500:#4b5b79;--line:#d7dff2;--white:#fff
+    }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:24px;line-height:1.35;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";background:var(--slb-100);color:var(--ink-900)}
+    body{
+      margin:24px;line-height:1.35;font-size:14px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";
+      background:var(--slb-100);color:var(--ink-900)
+    }
 
     /* Cap overall width */
     .page{max-width:1200px;margin:0 auto;padding:0 16px}
 
-    h1{margin:0 0 4px;color:var(--slb-800);font-weight:800;letter-spacing:.2px}
-    .subtitle{color:var(--ink-500);font-size:13px;margin-bottom:12px}
+    h1{margin:0 0 4px;color:var(--slb-800);font-weight:800;letter-spacing:.2px;font-size:18px}
+    .subtitle{color:var(--ink-500);font-size:11.5px;margin-bottom:12px}
 
     /* Two columns; stack on smaller screens */
     .grid{display:grid;gap:16px;grid-template-columns:1fr 360px;align-items:start}
@@ -23,9 +30,10 @@
 
     .card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--white);box-shadow:0 1px 0 rgba(0,0,0,.02)}
 
-    input,select,button{padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff}
+    /* Controls — smaller to match compact UI */
+    input,select,button{padding:6px 8px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:#fff}
     input:focus,select:focus,button:focus{outline:2px solid var(--slb-600);outline-offset:2px}
-    label{font-size:12px;color:var(--ink-700)}
+    label{font-size:11px;color:var(--ink-700)}
     .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
     .toolbar .btn{background:var(--slb-800);color:#fff;border:none;font-weight:600}
     .toolbar .btn:hover{background:var(--slb-700);cursor:pointer}
@@ -34,29 +42,40 @@
     /* Horizontal scroll for the rows only */
     .table-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:4px}
 
-    /* Fixed column widths — 7 columns after removing “What to Set” */
-    /* Columns: Date | Target | Name | Key | Value | WellType | Action */
+    /* Fixed column widths — after removing “What to Set” */
+    /* Columns: Date | Target | Name | Key | Value | WellRole | Action */
     .row{
       display:grid;
-      grid-template-columns: 130px 130px 150px 160px 180px 140px 88px;
+      grid-template-columns:130px 130px 150px 160px 180px 140px 88px;
       gap:8px;margin-bottom:8px;align-items:center
     }
     .row > *{min-width:0}
-    .row-head{font-weight:700;color:var(--slb-900);position:sticky;top:0;background:var(--white);z-index:1;border-bottom:1px solid var(--line);padding-top:6px;padding-bottom:6px}
-    .row-help{font-size:12px;color:var(--ink-500);border-bottom:1px dashed var(--line);padding-bottom:8px}
+    .row-head{
+      font-weight:700;color:var(--slb-900);position:sticky;top:0;background:var(--white);z-index:1;
+      border-bottom:1px solid var(--line);padding-top:6px;padding-bottom:6px;font-size:12.5px
+    }
+    .row-help{font-size:11px;color:var(--ink-500);border-bottom:1px dashed var(--line);padding-bottom:8px}
     .row-help>div{padding:2px 0}
     .row input,.row select{width:100%}
-    .row input[type="date"]{font-variant-numeric: tabular-nums;}
-    .r-key{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* prevent overflow */
+    .row input[type="date"]{font-variant-numeric:tabular-nums}
+    .r-key{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    /* Well Role placeholder (keeps alignment when NSB) */
+    .r-role-cell{display:flex}
+    .fake-field{
+      width:100%;display:flex;align-items:center;justify-content:center;
+      border-radius:10px;border:1px solid var(--ink-600);
+      background:var(--ink-700);color:#fff;font-size:12px;padding:6px 8px;user-select:none
+    }
 
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
-    pre{white-space:pre-wrap}
+    pre{white-space:pre-wrap;font-size:12px}
     .hide{display:none!important}
 
-    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;color:var(--ink-700)}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:11px;color:var(--ink-700)}
     .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--slb-700);display:inline-block}
     .legend{display:flex;flex-wrap:wrap;gap:8px}
-    .muted{color:var(--ink-500);font-size:12px}
+    .muted{color:var(--ink-500);font-size:11.5px}
   </style>
 </head>
 <body>
@@ -108,7 +127,7 @@
             <div>Well Name or Sink Name (<span class="mono">* = All</span>)</div>
             <div>Pick from Properties or Constraints</div>
             <div>Unit per <span class="mono">ECLIPSE_FIELD</span></div>
-            <div>PRODUCER / INJECTOR (optional). Ignored for NSB.</div>
+            <div>PRODUCER / INJECTOR (Well only)</div>
             <div>Delete row</div>
           </div>
 
@@ -124,7 +143,7 @@
 
       <!-- Right: Help -->
       <aside class="card">
-        <h3 style="color:var(--slb-800); margin-top:0;">Tips for fast, correct entry</h3>
+        <h3 style="color:var(--slb-800); margin-top:0; font-size:15px;">Tips for fast, correct entry</h3>
         <ul class="muted">
           <li>Use <span class="mono">*</span> to target all wells/sinks; patterns like <span class="mono">PROD*</span> are supported for wells.</li>
           <li><strong>Well rows</strong> set a single constraint per row.</li>
@@ -132,7 +151,7 @@
           <li><strong>NSB rows:</strong> choose either a Property or a Constraint from the single list.</li>
           <li>For removals, use <span class="mono">#REMOVE</span> as the value.</li>
         </ul>
-        <h4 style="color:var(--slb-800);">Common keys</h4>
+        <h4 style="color:var(--slb-800); font-size:14px;">Common keys</h4>
         <div class="muted"><strong>Well</strong> — OIL_PRODUCTION_RATE, WATER_PRODUCTION_RATE, GAS_PRODUCTION_RATE, LIQUID_PRODUCTION_RATE, BOTTOM_HOLE_PRESSURE, TUBING_HEAD_PRESSURE.</div>
         <div class="muted" style="margin-top:6px;"><strong>NSB (constraints)</strong> — MAX_GAS_FLOW_RATE, MAX_LIQUID_FLOW_RATE, MAX_OIL_FLOW_RATE, MAX_PRESSURE, MAX_WATER_FLOW_RATE, MIN_LIQUID_FLOW_RATE, MIN_PRESSURE.</div>
         <div class="muted" style="margin-top:6px;"><strong>NSB (properties)</strong> — Status, Pressure, Temperature, FlowBasis, GasRate, OilRate, WaterRate, LiquidRate, MassRate, Constraints.</div>
@@ -143,7 +162,6 @@
   <script>
   (function(){
     'use strict';
-    // WHY: surface JS errors to the user during edits.
     window.addEventListener('error', function(e){ alert('Script error: ' + e.message); });
 
     // Data
@@ -163,7 +181,6 @@
     function csvEscape(s){ if(s==null) return ''; var out=String(s); if(/[",\n]/.test(out)){ out=out.replace(/"/g,'""'); return '"'+out+'"'; } return out; }
     function make(tag,cls){ var el=document.createElement(tag); if(cls) el.className=cls; return el; }
     function withoutCustom(arr){ return arr.filter(function(x){ return x!=='Custom...'; }); }
-
     function addCustomOption(sel){
       var o=make('option'); o.value='__CUSTOM__'; o.textContent='Custom...'; o.dataset.kind='custom';
       sel.appendChild(o);
@@ -181,14 +198,12 @@
 
     function fillSelectNSBCombined(sel, preset){
       sel.innerHTML='';
-      // Properties group
       var grpP=document.createElement('optgroup'); grpP.label='Properties';
       withoutCustom(NSB_PROPERTIES).forEach(function(t){
         var o=make('option'); o.value=t; o.textContent=t; o.dataset.kind='prop';
         grpP.appendChild(o);
       });
       sel.appendChild(grpP);
-      // Constraints group
       var grpC=document.createElement('optgroup'); grpC.label='Constraints';
       withoutCustom(NSB_CONSTRAINTS).forEach(function(t){
         var o=make('option'); o.value=t; o.textContent=t; o.dataset.kind='cons';
@@ -203,16 +218,12 @@
     function addRow(dateISO, entity, name, key, value, wellType){
       var row=make('div','row');
 
-      // Date
       var d=make('input','r-date'); d.type='date'; d.value=dateISO||'';
-      // Target
       var ent=make('select','r-entity'); ['Well','NetworkSinkBoundary'].forEach(function(x){ var o=make('option'); o.value=x; o.textContent=x; ent.appendChild(o); }); ent.value=entity||'Well';
-      // Name
       var n=make('input','r-name'); n.type='text'; n.placeholder='Well Name or Sink Name (* = All)'; n.value=(name==null||name==='')?'*':name;
 
       // Key (Constraint or Property in one select)
       var keySel=make('select','r-key r-key-nsb');
-
       function refillKey(){
         if(ent.value==='Well') fillSelectWellConstraints(keySel, key||undefined);
         else fillSelectNSBCombined(keySel, key||undefined);
@@ -237,28 +248,38 @@
           } else {
             alert('Invalid type. Use P or C.'); refillKey(); return;
           }
-          key = clean; // set preset
-          refillKey();
-          keySel.value = clean;
+          key = clean; refillKey(); keySel.value = clean;
         }
         renderPreview();
       });
 
-      // Value
       var v=make('input','r-value'); v.type='text'; v.placeholder='Constraint or Property value, unit per ECLIPSE_FIELD'; v.value=value||'';
-      // Well Type (only for Well)
-      var wType=make('select','r-welltype'); ['','PRODUCER','WATER_INJECTOR','GAS_INJECTOR','OIL_INJECTOR'].forEach(function(t){ var o=make('option'); o.value=t; o.textContent=(t===''?'—':t); wType.appendChild(o); }); wType.value=(wellType==null?'':wellType);
+
+      // Column #6 (Well Role cell): contains BOTH real select and dark placeholder
+      var roleCell = make('div','r-role-cell');
+      var wType=make('select','r-welltype');
+      ['','PRODUCER','WATER_INJECTOR','GAS_INJECTOR','OIL_INJECTOR'].forEach(function(t){ var o=make('option'); o.value=t; o.textContent=(t===''?'—':t); wType.appendChild(o); });
+      wType.value=(wellType==null?'':wellType);
+
+      var rolePlaceholder = make('div','fake-field'); rolePlaceholder.textContent='N/A'; rolePlaceholder.setAttribute('aria-hidden','true');
+      roleCell.appendChild(wType);
+      roleCell.appendChild(rolePlaceholder);
+
       var del=make('button','r-del'); del.type='button'; del.textContent='🗑 Remove';
 
-      function applyVisibility(){ wType.classList.toggle('hide', ent.value!=='Well'); }
+      function applyVisibility(){
+        var isWell = (ent.value==='Well');
+        wType.classList.toggle('hide', !isWell);            // show select only for Well
+        rolePlaceholder.classList.toggle('hide', isWell);   // show dark placeholder for NSB
+      }
       applyVisibility();
 
       ent.addEventListener('change', function(){ refillKey(); applyVisibility(); renderPreview(); });
       [d,ent,n,v,wType].forEach(function(inp){ inp.addEventListener('input', renderPreview); });
       del.addEventListener('click', function(){ row.remove(); renderPreview(); });
 
-      // Append in new 7-column order
-      row.appendChild(d); row.appendChild(ent); row.appendChild(n); row.appendChild(keySel); row.appendChild(v); row.appendChild(wType); row.appendChild(del);
+      // Append in 7-column order
+      row.appendChild(d); row.appendChild(ent); row.appendChild(n); row.appendChild(keySel); row.appendChild(v); row.appendChild(roleCell); row.appendChild(del);
       rowsEl.appendChild(row);
       renderPreview();
     }
@@ -282,7 +303,8 @@
         var inferredKind = (entity==='Well') ? 'cons' : (opt && opt.dataset && opt.dataset.kind==='prop' ? 'prop' : 'cons');
 
         var val=r.querySelector('.r-value').value.trim();
-        var wtype=r.querySelector('.r-welltype').value;
+        var wtypeSel=r.querySelector('.r-welltype');
+        var wtype=wtypeSel ? wtypeSel.value : '';
 
         entries.push({dateISO:dval,entity:entity,name:name,kind:inferredKind,key:key,val:val,wtype:wtype});
       }
@@ -322,7 +344,6 @@
       return lines.join('\n');
     }
 
-    // Render CSV preview
     function renderPreview(){
       var csv=buildCSV();
       previewEl.textContent = csv ? csv.split('\n').slice(0,20).join('\n') : '';
