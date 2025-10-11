@@ -1,3 +1,4 @@
+<!-- file: index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,17 +10,18 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:24px;line-height:1.35;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";background:var(--slb-100);color:var(--ink-900)}
+
+    /* Cap overall width (WHY: stop the page from stretching) */
+    .page{max-width:1200px;margin:0 auto;padding:0 16px}
+
     h1{margin:0 0 4px;color:var(--slb-800);font-weight:800;letter-spacing:.2px}
     .subtitle{color:var(--ink-500);font-size:13px;margin-bottom:12px}
 
-    /* Full-width page */
-    .page{width:100%;margin:0;padding:0 16px}
+    /* Two columns; stack on smaller screens */
+    .grid{display:grid;gap:16px;grid-template-columns:1fr 360px;align-items:start}
+    @media (max-width:1024px){.grid{grid-template-columns:1fr}}
 
-    /* Two columns on wide screens; stack on smaller */
-    .grid{display:grid;gap:16px;grid-template-columns:minmax(960px,1fr) 360px;align-items:start}
-    @media (max-width:1200px){.grid{grid-template-columns:1fr}}
-
-    .card{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--white);box-shadow:0 1px 0 rgba(0,0,0,.02)}
+    .card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--white);box-shadow:0 1px 0 rgba(0,0,0,.02)}
 
     input,select,button{padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff}
     input:focus,select:focus,button:focus{outline:2px solid var(--slb-600);outline-offset:2px}
@@ -29,19 +31,25 @@
     .toolbar .btn:hover{background:var(--slb-700);cursor:pointer}
     .sep{height:1px;background:var(--line);margin:12px 0}
 
+    /* Scroll container for the table only (WHY: keep the card tidy when columns exceed left pane) */
+    .table-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:4px}
+
+    /* Fixed column widths — no growth on Name or Value */
     /* Columns: Date | Target | Name | What | Key | Value | WellType | Action */
     .row{
       display:grid;
-      grid-template-columns: 160px 130px 150px 120px minmax(200px,1fr) 140px 160px 96px;
+      grid-template-columns: 130px 130px 150px 110px 160px 180px 140px 88px;
       gap:8px;margin-bottom:8px;align-items:center
     }
-    .row > *{min-width:0} /* stop overflow */
-    .row-head{font-weight:700;color:var(--slb-900)}
-    .row-help{font-size:12px;color:var(--ink-500)}
+    .row > *{min-width:0}
+    .row-head{font-weight:700;color:var(--slb-900);position:sticky;top:0;background:var(--white);z-index:1;border-bottom:1px solid var(--line);padding-top:6px;padding-bottom:6px}
+    .row-help{font-size:12px;color:var(--ink-500);border-bottom:1px dashed var(--line);padding-bottom:8px}
     .row-help>div{padding:2px 0}
     .row input,.row select{width:100%}
-    /* Make date digits readable and ensure full date shows */
     .row input[type="date"]{font-variant-numeric: tabular-nums;}
+
+    /* Prevent long keys from blowing up the layout */
+    .r-key{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
     pre{white-space:pre-wrap}
@@ -76,7 +84,6 @@
 
         <div class="sep"></div>
 
-        <!-- Units reference -->
         <div class="legend" aria-label="Units (ECLIPSE_FIELD)">
           <span class="pill"><span class="dot"></span>Pressure: <span class="mono">psi</span></span>
           <span class="pill"><span class="dot"></span>Gas rate: <span class="mono">MSCF/d</span></span>
@@ -86,29 +93,31 @@
 
         <div class="sep"></div>
 
-        <!-- Header + help -->
-        <div class="row row-head">
-          <div>Effective Date</div>
-          <div>Target</div>
-          <div>Node Name</div>
-          <div>What to Set</div>
-          <div>Constraint / Property Name</div>
-          <div>Value (ECLIPSE_FIELD)</div>
-          <div>Well Role (optional)</div>
-          <div>Action</div>
-        </div>
-        <div class="row row-help">
-          <div>DD/MM/YYYY</div>
-          <div>Well or NetworkSinkBoundary</div>
-          <div>Well Name or Sink Name (<span class="mono">* = All</span>)</div>
-          <div>Well → Constraint | NSB → Constraint or Property</div>
-          <div>Pick from list or add Custom…</div>
-          <div>Constraint or Property value, unit per <span class="mono">ECLIPSE_FIELD</span></div>
-          <div>PRODUCER / INJECTOR (optional). Ignored for NSB.</div>
-          <div>Delete row</div>
-        </div>
+        <!-- TABLE (h-scroll only) -->
+        <div class="table-scroll">
+          <div class="row row-head">
+            <div>Effective Date</div>
+            <div>Target</div>
+            <div>Node Name</div>
+            <div>What to Set</div>
+            <div>Constraint / Property Name</div>
+            <div>Value (ECLIPSE_FIELD)</div>
+            <div>Well Role (optional)</div>
+            <div>Action</div>
+          </div>
+          <div class="row row-help">
+            <div>DD/MM/YYYY</div>
+            <div>Well or NetworkSinkBoundary</div>
+            <div>Well Name or Sink Name (<span class="mono">* = All</span>)</div>
+            <div>Well → Constraint | NSB → Constraint or Property</div>
+            <div>Pick from list or add Custom…</div>
+            <div>Constraint or Property value, unit per <span class="mono">ECLIPSE_FIELD</span></div>
+            <div>PRODUCER / INJECTOR (optional). Ignored for NSB.</div>
+            <div>Delete row</div>
+          </div>
 
-        <div id="rows"></div>
+          <div id="rows"></div>
+        </div>
 
         <div class="sep"></div>
         <details open>
@@ -138,26 +147,20 @@
   <script>
   (function(){
     'use strict';
-
-    // Guard: surface any JS error so nothing fails silently.
     window.addEventListener('error', function(e){ alert('Script error: ' + e.message); });
 
-    // Data
     var WELL_CONSTRAINTS=['OIL_PRODUCTION_RATE','WATER_PRODUCTION_RATE','GAS_PRODUCTION_RATE','LIQUID_PRODUCTION_RATE','BOTTOM_HOLE_PRESSURE','TUBING_HEAD_PRESSURE','Custom...'];
     var WELL_TYPES=['','PRODUCER','WATER_INJECTOR','GAS_INJECTOR','OIL_INJECTOR'];
     var NSB_PROPERTIES=['Status','Pressure','Temperature','FlowBasis','GasRate','OilRate','WaterRate','LiquidRate','MassRate','Constraints','Custom...'];
     var NSB_CONSTRAINTS=['MAX_GAS_FLOW_RATE','MAX_LIQUID_FLOW_RATE','MAX_OIL_FLOW_RATE','MAX_PRESSURE','MAX_WATER_FLOW_RATE','MIN_LIQUID_FLOW_RATE','MIN_PRESSURE','Custom...'];
 
-    // DOM refs
     var rowsEl, previewEl, startDateEl, btnInit, btnAdd, btnExport, btnClear;
 
-    // Utils
     function fmtDateDDMMYYYY(iso){ if(!iso) return ''; var p=iso.split('-'); return p.length===3 ? (p[2]+'/'+p[1]+'/'+p[0]) : iso; }
     function csvEscape(s){ if(s==null) return ''; var out=String(s); if(/[",\n]/.test(out)){ out=out.replace(/"/g,'""'); return '"'+out+'"'; } return out; }
     function make(tag,cls){ var el=document.createElement(tag); if(cls) el.className=cls; return el; }
     function fillSelect(sel, items, preset){ sel.innerHTML=''; items.forEach(function(t){ var o=make('option'); o.value=t; o.textContent=(t===''?'—':t); sel.appendChild(o); }); if(preset!=null && items.indexOf(preset)>-1) sel.value=preset; }
 
-    // Row constructor
     function addRow(dateISO, entity, name, kindVal, key, value, wellType){
       var row=make('div','row');
 
@@ -216,13 +219,12 @@
       del.addEventListener('click', function(){ row.remove(); renderPreview(); });
 
       row.appendChild(d); row.appendChild(ent); row.appendChild(n); row.appendChild(kind); row.appendChild(keySel); row.appendChild(v); row.appendChild(wType); row.appendChild(del);
-      rowsEl.appendChild(row);
+      document.getElementById('rows').appendChild(row);
       renderPreview();
     }
 
-    // CSV builder
     function buildCSV(){
-      var entries=[]; var rs=rowsEl.querySelectorAll('.row');
+      var entries=[]; var rs=document.getElementById('rows').querySelectorAll('.row');
       for(var i=0;i<rs.length;i++){
         var r=rs[i];
         var dateISO=r.querySelector('.r-date'); if(!dateISO) continue;
@@ -270,18 +272,17 @@
       rowsArr.forEach(function(r){ var out=[]; cols.forEach(function(h){ out.push(csvEscape(r.map.get(h)||'')); }); lines.push(out.join(',')); });
       return lines.join('\n');
     }
-    function renderPreview(){ var csv=buildCSV(); previewEl.textContent = csv ? csv.split('\n').slice(0,20).join('\n') : ''; }
+    function renderPreview(){ var csv=buildCSV(); document.getElementById('preview').textContent = csv ? csv.split('\n').slice(0,20).join('\n') : ''; }
     function download(name,text){ var blob=new Blob([text],{type:'text/csv;charset=utf-8'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
 
-    // Init
     function boot(){
-      rowsEl=document.getElementById('rows');
-      previewEl=document.getElementById('preview');
-      startDateEl=document.getElementById('startDate');
-      btnInit=document.getElementById('btnInit');
-      btnAdd=document.getElementById('btnAdd');
-      btnExport=document.getElementById('btnExport');
-      btnClear=document.getElementById('btnClear');
+      var rowsEl=document.getElementById('rows');
+      var previewEl=document.getElementById('preview');
+      var startDateEl=document.getElementById('startDate');
+      var btnInit=document.getElementById('btnInit');
+      var btnAdd=document.getElementById('btnAdd');
+      var btnExport=document.getElementById('btnExport');
+      var btnClear=document.getElementById('btnClear');
 
       var todayISO=new Date().toISOString().slice(0,10);
       startDateEl.value=todayISO;
