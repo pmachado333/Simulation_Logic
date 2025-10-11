@@ -11,7 +11,7 @@
     html,body{height:100%}
     body{margin:24px;line-height:1.35;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";background:var(--slb-100);color:var(--ink-900)}
 
-    /* Cap overall width (WHY: stop the page from stretching) */
+    /* Cap overall width */
     .page{max-width:1200px;margin:0 auto;padding:0 16px}
 
     h1{margin:0 0 4px;color:var(--slb-800);font-weight:800;letter-spacing:.2px}
@@ -31,14 +31,14 @@
     .toolbar .btn:hover{background:var(--slb-700);cursor:pointer}
     .sep{height:1px;background:var(--line);margin:12px 0}
 
-    /* Scroll container for the table only (WHY: keep the card tidy when columns exceed left pane) */
+    /* Horizontal scroll for the rows only */
     .table-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:4px}
 
-    /* Fixed column widths — no growth on Name or Value */
-    /* Columns: Date | Target | Name | What | Key | Value | WellType | Action */
+    /* Fixed column widths — 7 columns after removing “What to Set” */
+    /* Columns: Date | Target | Name | Key | Value | WellType | Action */
     .row{
       display:grid;
-      grid-template-columns: 130px 130px 150px 110px 160px 180px 140px 88px;
+      grid-template-columns: 130px 130px 150px 160px 180px 140px 88px;
       gap:8px;margin-bottom:8px;align-items:center
     }
     .row > *{min-width:0}
@@ -47,9 +47,7 @@
     .row-help>div{padding:2px 0}
     .row input,.row select{width:100%}
     .row input[type="date"]{font-variant-numeric: tabular-nums;}
-
-    /* Prevent long keys from blowing up the layout */
-    .r-key{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .r-key{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* prevent overflow */
 
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
     pre{white-space:pre-wrap}
@@ -99,7 +97,6 @@
             <div>Effective Date</div>
             <div>Target</div>
             <div>Node Name</div>
-            <div>What to Set</div>
             <div>Constraint / Property Name</div>
             <div>Value (ECLIPSE_FIELD)</div>
             <div>Well Role (optional)</div>
@@ -109,9 +106,8 @@
             <div>DD/MM/YYYY</div>
             <div>Well or NetworkSinkBoundary</div>
             <div>Well Name or Sink Name (<span class="mono">* = All</span>)</div>
-            <div>Well → Constraint | NSB → Constraint or Property</div>
-            <div>Pick from list or add Custom…</div>
-            <div>Constraint or Property value, unit per <span class="mono">ECLIPSE_FIELD</span></div>
+            <div>Pick from Properties or Constraints</div>
+            <div>Unit per <span class="mono">ECLIPSE_FIELD</span></div>
             <div>PRODUCER / INJECTOR (optional). Ignored for NSB.</div>
             <div>Delete row</div>
           </div>
@@ -131,9 +127,9 @@
         <h3 style="color:var(--slb-800); margin-top:0;">Tips for fast, correct entry</h3>
         <ul class="muted">
           <li>Use <span class="mono">*</span> to target all wells/sinks; patterns like <span class="mono">PROD*</span> are supported for wells.</li>
-          <li><strong>Well rows</strong> always set a single constraint per column. Add multiple rows if needed on the same date.</li>
+          <li><strong>Well rows</strong> set a single constraint per row.</li>
           <li><strong>Well Role</strong> writes <span class="mono">Well &lt;pattern&gt; Type</span> on that date. Leave blank if unchanged.</li>
-          <li><strong>NSB rows</strong> can set a Property (e.g., <span class="mono">Pressure</span>) or a Constraint (e.g., <span class="mono">MAX_PRESSURE</span>).</li>
+          <li><strong>NSB rows:</strong> choose either a Property or a Constraint from the single list.</li>
           <li>For removals, use <span class="mono">#REMOVE</span> as the value.</li>
         </ul>
         <h4 style="color:var(--slb-800);">Common keys</h4>
@@ -147,95 +143,148 @@
   <script>
   (function(){
     'use strict';
+    // WHY: surface JS errors to the user during edits.
     window.addEventListener('error', function(e){ alert('Script error: ' + e.message); });
 
-    var WELL_CONSTRAINTS=['OIL_PRODUCTION_RATE','WATER_PRODUCTION_RATE','GAS_PRODUCTION_RATE','LIQUID_PRODUCTION_RATE','BOTTOM_HOLE_PRESSURE','TUBING_HEAD_PRESSURE','Custom...'];
+    // Data
+    var WELL_CONSTRAINTS=[
+      'OIL_PRODUCTION_RATE','WATER_PRODUCTION_RATE','GAS_PRODUCTION_RATE',
+      'LIQUID_PRODUCTION_RATE','BOTTOM_HOLE_PRESSURE','TUBING_HEAD_PRESSURE','Custom...'
+    ];
     var WELL_TYPES=['','PRODUCER','WATER_INJECTOR','GAS_INJECTOR','OIL_INJECTOR'];
     var NSB_PROPERTIES=['Status','Pressure','Temperature','FlowBasis','GasRate','OilRate','WaterRate','LiquidRate','MassRate','Constraints','Custom...'];
     var NSB_CONSTRAINTS=['MAX_GAS_FLOW_RATE','MAX_LIQUID_FLOW_RATE','MAX_OIL_FLOW_RATE','MAX_PRESSURE','MAX_WATER_FLOW_RATE','MIN_LIQUID_FLOW_RATE','MIN_PRESSURE','Custom...'];
 
-    var rowsEl, previewEl, startDateEl, btnInit, btnAdd, btnExport, btnClear;
+    // DOM refs
+    var rowsEl, previewEl, startDateEl;
 
+    // Utils
     function fmtDateDDMMYYYY(iso){ if(!iso) return ''; var p=iso.split('-'); return p.length===3 ? (p[2]+'/'+p[1]+'/'+p[0]) : iso; }
     function csvEscape(s){ if(s==null) return ''; var out=String(s); if(/[",\n]/.test(out)){ out=out.replace(/"/g,'""'); return '"'+out+'"'; } return out; }
     function make(tag,cls){ var el=document.createElement(tag); if(cls) el.className=cls; return el; }
-    function fillSelect(sel, items, preset){ sel.innerHTML=''; items.forEach(function(t){ var o=make('option'); o.value=t; o.textContent=(t===''?'—':t); sel.appendChild(o); }); if(preset!=null && items.indexOf(preset)>-1) sel.value=preset; }
+    function withoutCustom(arr){ return arr.filter(function(x){ return x!=='Custom...'; }); }
 
-    function addRow(dateISO, entity, name, kindVal, key, value, wellType){
+    function addCustomOption(sel){
+      var o=make('option'); o.value='__CUSTOM__'; o.textContent='Custom...'; o.dataset.kind='custom';
+      sel.appendChild(o);
+    }
+
+    function fillSelectWellConstraints(sel, preset){
+      sel.innerHTML='';
+      withoutCustom(WELL_CONSTRAINTS).forEach(function(t){
+        var o=make('option'); o.value=t; o.textContent=t; o.dataset.kind='cons';
+        sel.appendChild(o);
+      });
+      addCustomOption(sel);
+      if(preset){ sel.value=preset; }
+    }
+
+    function fillSelectNSBCombined(sel, preset){
+      sel.innerHTML='';
+      // Properties group
+      var grpP=document.createElement('optgroup'); grpP.label='Properties';
+      withoutCustom(NSB_PROPERTIES).forEach(function(t){
+        var o=make('option'); o.value=t; o.textContent=t; o.dataset.kind='prop';
+        grpP.appendChild(o);
+      });
+      sel.appendChild(grpP);
+      // Constraints group
+      var grpC=document.createElement('optgroup'); grpC.label='Constraints';
+      withoutCustom(NSB_CONSTRAINTS).forEach(function(t){
+        var o=make('option'); o.value=t; o.textContent=t; o.dataset.kind='cons';
+        grpC.appendChild(o);
+      });
+      sel.appendChild(grpC);
+      addCustomOption(sel);
+      if(preset){ sel.value=preset; }
+    }
+
+    // Row constructor
+    function addRow(dateISO, entity, name, key, value, wellType){
       var row=make('div','row');
 
+      // Date
       var d=make('input','r-date'); d.type='date'; d.value=dateISO||'';
+      // Target
       var ent=make('select','r-entity'); ['Well','NetworkSinkBoundary'].forEach(function(x){ var o=make('option'); o.value=x; o.textContent=x; ent.appendChild(o); }); ent.value=entity||'Well';
+      // Name
       var n=make('input','r-name'); n.type='text'; n.placeholder='Well Name or Sink Name (* = All)'; n.value=(name==null||name==='')?'*':name;
 
-      var kind=make('select','r-kind');
-      function resetKind(){
-        kind.innerHTML='';
-        if(ent.value==='Well'){ var o=make('option'); o.value='cons'; o.textContent='Constraint'; kind.appendChild(o); kind.disabled=true; }
-        else { [['cons','Constraint'],['prop','Property']].forEach(function(x){ var o=make('option'); o.value=x[0]; o.textContent=x[1]; kind.appendChild(o); }); kind.disabled=false; }
-      }
-      resetKind(); kind.value = kindVal || 'cons';
+      // Key (Constraint or Property in one select)
+      var keySel=make('select','r-key r-key-nsb');
 
-      var keySel=make('select','r-key');
       function refillKey(){
-        if(ent.value==='Well') fillSelect(keySel, WELL_CONSTRAINTS, key||undefined);
-        else if(kind.value==='prop') fillSelect(keySel, NSB_PROPERTIES, key||undefined);
-        else fillSelect(keySel, NSB_CONSTRAINTS, key||undefined);
+        if(ent.value==='Well') fillSelectWellConstraints(keySel, key||undefined);
+        else fillSelectNSBCombined(keySel, key||undefined);
       }
       refillKey();
 
       keySel.addEventListener('change', function(){
-        if(ent.value==='Well' && keySel.value==='Custom...'){
-          var label=prompt('Enter custom WELL constraint name:');
-          if(label && label.trim()){
-            var val=label.trim();
-            if(WELL_CONSTRAINTS.indexOf(val)===-1) WELL_CONSTRAINTS.splice(WELL_CONSTRAINTS.length-1,0,val);
-            fillSelect(keySel, WELL_CONSTRAINTS, val);
-          } else { fillSelect(keySel, WELL_CONSTRAINTS, WELL_CONSTRAINTS[0]); }
-        }
-        if(ent.value==='NetworkSinkBoundary' && keySel.value==='Custom...'){
-          var which=prompt('Type C for Constraint or P for Property');
-          var label2=prompt('Enter custom name:');
-          if(label2 && label2.trim()){
-            var v=label2.trim();
-            if(which && which.toUpperCase()==='P'){ if(NSB_PROPERTIES.indexOf(v)===-1) NSB_PROPERTIES.splice(NSB_PROPERTIES.length-1,0,v); kind.value='prop'; }
-            else { if(NSB_CONSTRAINTS.indexOf(v)===-1) NSB_CONSTRAINTS.splice(NSB_CONSTRAINTS.length-1,0,v); kind.value='cons'; }
-            refillKey(); keySel.value=v;
-          } else { refillKey(); }
+        if(keySel.value==='__CUSTOM__'){
+          var type = prompt('Is this a Property (P) or Constraint (C)?');
+          if(!type){ refillKey(); return; }
+          var label = prompt('Enter custom name:');
+          if(!label || !label.trim()){ refillKey(); return; }
+          var clean=label.trim();
+          if(type.toUpperCase()==='P'){
+            if(NSB_PROPERTIES.indexOf(clean)===-1) NSB_PROPERTIES.splice(NSB_PROPERTIES.length-1,0,clean);
+          } else if(type.toUpperCase()==='C'){
+            if(ent.value==='Well'){
+              if(WELL_CONSTRAINTS.indexOf(clean)===-1) WELL_CONSTRAINTS.splice(WELL_CONSTRAINTS.length-1,0,clean);
+            } else {
+              if(NSB_CONSTRAINTS.indexOf(clean)===-1) NSB_CONSTRAINTS.splice(NSB_CONSTRAINTS.length-1,0,clean);
+            }
+          } else {
+            alert('Invalid type. Use P or C.'); refillKey(); return;
+          }
+          key = clean; // set preset
+          refillKey();
+          keySel.value = clean;
         }
         renderPreview();
       });
 
+      // Value
       var v=make('input','r-value'); v.type='text'; v.placeholder='Constraint or Property value, unit per ECLIPSE_FIELD'; v.value=value||'';
-      var wType=make('select','r-welltype'); fillSelect(wType, WELL_TYPES, (wellType==null?'':wellType));
+      // Well Type (only for Well)
+      var wType=make('select','r-welltype'); ['','PRODUCER','WATER_INJECTOR','GAS_INJECTOR','OIL_INJECTOR'].forEach(function(t){ var o=make('option'); o.value=t; o.textContent=(t===''?'—':t); wType.appendChild(o); }); wType.value=(wellType==null?'':wellType);
       var del=make('button','r-del'); del.type='button'; del.textContent='🗑 Remove';
 
       function applyVisibility(){ wType.classList.toggle('hide', ent.value!=='Well'); }
       applyVisibility();
 
-      ent.addEventListener('change', function(){ resetKind(); refillKey(); applyVisibility(); renderPreview(); });
-      kind.addEventListener('change', function(){ refillKey(); renderPreview(); });
+      ent.addEventListener('change', function(){ refillKey(); applyVisibility(); renderPreview(); });
       [d,ent,n,v,wType].forEach(function(inp){ inp.addEventListener('input', renderPreview); });
       del.addEventListener('click', function(){ row.remove(); renderPreview(); });
 
-      row.appendChild(d); row.appendChild(ent); row.appendChild(n); row.appendChild(kind); row.appendChild(keySel); row.appendChild(v); row.appendChild(wType); row.appendChild(del);
-      document.getElementById('rows').appendChild(row);
+      // Append in new 7-column order
+      row.appendChild(d); row.appendChild(ent); row.appendChild(n); row.appendChild(keySel); row.appendChild(v); row.appendChild(wType); row.appendChild(del);
+      rowsEl.appendChild(row);
       renderPreview();
     }
 
+    // CSV builder
     function buildCSV(){
-      var entries=[]; var rs=document.getElementById('rows').querySelectorAll('.row');
+      var entries=[]; var rs=rowsEl.querySelectorAll('.row');
       for(var i=0;i<rs.length;i++){
         var r=rs[i];
         var dateISO=r.querySelector('.r-date'); if(!dateISO) continue;
         var dval=dateISO.value; if(!dval) continue;
+
         var entity=r.querySelector('.r-entity').value;
         var name=(r.querySelector('.r-name').value.trim()||'*');
-        var kind=r.querySelector('.r-kind').value;
-        var key=r.querySelector('.r-key').value.trim();
+
+        var keySel=r.querySelector('.r-key');
+        var key=(keySel && keySel.value && keySel.value!=='__CUSTOM__') ? keySel.value.trim() : '';
+        if(!key) continue;
+
+        var opt=(keySel && keySel.options[keySel.selectedIndex]) ? keySel.options[keySel.selectedIndex] : null;
+        var inferredKind = (entity==='Well') ? 'cons' : (opt && opt.dataset && opt.dataset.kind==='prop' ? 'prop' : 'cons');
+
         var val=r.querySelector('.r-value').value.trim();
         var wtype=r.querySelector('.r-welltype').value;
-        entries.push({dateISO:dval,entity:entity,name:name,kind:kind,key:key,val:val,wtype:wtype});
+
+        entries.push({dateISO:dval,entity:entity,name:name,kind:inferredKind,key:key,val:val,wtype:wtype});
       }
       if(!entries.length) return '';
 
@@ -272,13 +321,26 @@
       rowsArr.forEach(function(r){ var out=[]; cols.forEach(function(h){ out.push(csvEscape(r.map.get(h)||'')); }); lines.push(out.join(',')); });
       return lines.join('\n');
     }
-    function renderPreview(){ var csv=buildCSV(); document.getElementById('preview').textContent = csv ? csv.split('\n').slice(0,20).join('\n') : ''; }
-    function download(name,text){ var blob=new Blob([text],{type:'text/csv;charset=utf-8'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
 
+    // Render CSV preview
+    function renderPreview(){
+      var csv=buildCSV();
+      previewEl.textContent = csv ? csv.split('\n').slice(0,20).join('\n') : '';
+    }
+
+    function download(name,text){
+      var blob=new Blob([text],{type:'text/csv;charset=utf-8'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a'); a.href=url; a.download=name;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    // Init
     function boot(){
-      var rowsEl=document.getElementById('rows');
-      var previewEl=document.getElementById('preview');
-      var startDateEl=document.getElementById('startDate');
+      rowsEl=document.getElementById('rows');
+      previewEl=document.getElementById('preview');
+      startDateEl=document.getElementById('startDate');
+
       var btnInit=document.getElementById('btnInit');
       var btnAdd=document.getElementById('btnAdd');
       var btnExport=document.getElementById('btnExport');
@@ -286,11 +348,18 @@
 
       var todayISO=new Date().toISOString().slice(0,10);
       startDateEl.value=todayISO;
-      addRow(todayISO,'Well','*','cons','OIL_PRODUCTION_RATE','', '');
+      addRow(todayISO,'Well','*','OIL_PRODUCTION_RATE','', '');
 
-      btnInit.addEventListener('click',function(){ var d=startDateEl.value; if(!d){alert('Pick an effective date');return;} rowsEl.innerHTML=''; addRow(d,'Well','*','cons','OIL_PRODUCTION_RATE','', ''); });
-      btnAdd.addEventListener('click',function(){ var d=startDateEl.value||todayISO; addRow(d,'Well','*','cons','OIL_PRODUCTION_RATE','', ''); });
-      btnExport.addEventListener('click',function(){ var csv=buildCSV(); if(!csv){alert('No rows to export');return;} download('case_Constraints.csv',csv); });
+      btnInit.addEventListener('click',function(){
+        var d=startDateEl.value; if(!d){alert('Pick an effective date');return;}
+        rowsEl.innerHTML=''; addRow(d,'Well','*','OIL_PRODUCTION_RATE','', '');
+      });
+      btnAdd.addEventListener('click',function(){
+        var d=startDateEl.value||todayISO; addRow(d,'Well','*','OIL_PRODUCTION_RATE','', '');
+      });
+      btnExport.addEventListener('click',function(){
+        var csv=buildCSV(); if(!csv){alert('No rows to export');return;} download('case_Constraints.csv',csv);
+      });
       btnClear.addEventListener('click',function(){ rowsEl.innerHTML=''; previewEl.textContent=''; });
     }
     document.addEventListener('DOMContentLoaded', boot);
