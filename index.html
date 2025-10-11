@@ -5,77 +5,50 @@
   <title>Simulation Logic input generator - FDPlan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* ===== SLB-inspired palette (stable build) ===== */
-    :root {
-      --slb-900:#001a5e; /* deep navy */
-      --slb-800:#002d84; /* primary */
-      --slb-700:#003aa8;
-      --slb-600:#175cd3;
-      --slb-100:#e7eefc; /* light tint */
-      --ink-900:#0b1220;
-      --ink-700:#233047;
-      --ink-500:#4b5b79;
-      --line:#d7dff2;
-      --white:#fff;
-    }
-
+    :root{--slb-900:#001a5e;--slb-800:#002d84;--slb-700:#003aa8;--slb-600:#175cd3;--slb-100:#e7eefc;--ink-900:#0b1220;--ink-700:#233047;--ink-500:#4b5b79;--line:#d7dff2;--white:#fff}
     *{box-sizing:border-box}
-    html, body { height: 100%; }
-    body {
-      margin: 24px;
-      line-height: 1.35;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";
-      background: var(--slb-100);
-      color: var(--ink-900);
+    html,body{height:100%}
+    body{margin:24px;line-height:1.35;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";background:var(--slb-100);color:var(--ink-900)}
+    h1{margin:0 0 4px;color:var(--slb-800);font-weight:800;letter-spacing:.2px}
+    .subtitle{color:var(--ink-500);font-size:13px;margin-bottom:12px}
+
+    /* Full-width page */
+    .page{width:100%;margin:0;padding:0 16px}
+
+    /* Two columns on wide screens; stack on smaller */
+    .grid{display:grid;gap:16px;grid-template-columns:minmax(960px,1fr) 360px;align-items:start}
+    @media (max-width:1200px){.grid{grid-template-columns:1fr}}
+
+    .card{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--white);box-shadow:0 1px 0 rgba(0,0,0,.02)}
+
+    input,select,button{padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff}
+    input:focus,select:focus,button:focus{outline:2px solid var(--slb-600);outline-offset:2px}
+    label{font-size:12px;color:var(--ink-700)}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+    .toolbar .btn{background:var(--slb-800);color:#fff;border:none;font-weight:600}
+    .toolbar .btn:hover{background:var(--slb-700);cursor:pointer}
+    .sep{height:1px;background:var(--line);margin:12px 0}
+
+    /* Columns: Date | Target | Name | What | Key | Value | WellType | Action */
+    .row{
+      display:grid;
+      grid-template-columns: 110px 120px 140px 120px minmax(280px,1fr) minmax(180px,1fr) 160px 96px;
+      gap:8px;margin-bottom:8px;align-items:center
     }
-    h1 { margin: 0 0 4px; color: var(--slb-800); font-weight: 800; letter-spacing: .2px; }
-    .subtitle { color: var(--ink-500); font-size: 13px; margin-bottom: 12px; }
+    .row > *{min-width:0} /* critical to stop overflow */
+    .row-head{font-weight:700;color:var(--slb-900)}
+    .row-help{font-size:12px;color:var(--ink-500)}
+    .row-help>div{padding:2px 0}
+    .row input,.row select{width:100%}
 
-    /* ===== Centered container for header + grid ===== */
-    .page { max-width: 1260px; width: clamp(1020px, 92vw, 1260px); margin: 0 auto; }
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+    pre{white-space:pre-wrap}
+    .hide{display:none!important}
 
-    /* Layout: roomy left panel, fixed help card */
-    .grid {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: minmax(740px, 1fr) 360px;
-      align-items: start;
-    }
-    .card { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--white); box-shadow: 0 1px 0 rgba(0,0,0,.02); }
-
-    /* Controls */
-    input, select, button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; background: #fff; }
-    input:focus, select:focus, button:focus { outline: 2px solid var(--slb-600); outline-offset: 2px; }
-    label { font-size: 12px; color: var(--ink-700); }
-    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
-    .toolbar .btn { background: var(--slb-800); color: #fff; border: none; font-weight: 600; }
-    .toolbar .btn:hover { background: var(--slb-700); cursor: pointer; }
-    .sep { height: 1px; background: var(--line); margin: 12px 0; }
-
-    /* ===== Table columns (balanced, overflow-safe) =====
-       Date | Target | Name | What | Key | Value | WellType | Action */
-    .row {
-      display: grid;
-      grid-template-columns:
-        140px 150px 150px 150px
-        minmax(260px, 1fr) 190px 180px 100px;
-      gap: 10px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-    .row-head { font-weight: 700; color: var(--slb-900); }
-    .row-help { font-size: 12px; color: var(--ink-500); }
-    .row-help > div { padding: 2px 0; }
-    .row input, .row select { width: 100%; }
-
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-    pre { white-space: pre-wrap; }
-    .hide { display:none !important; }
-
-    .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; border:1px solid var(--line); background:#fff; font-size:12px; color:var(--ink-700); }
-    .pill .dot { width:6px; height:6px; border-radius:50%; background: var(--slb-700); display:inline-block; }
-    .legend { display:flex; flex-wrap:wrap; gap:8px; }
-    .muted { color: var(--ink-500); font-size: 12px; }
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;color:var(--ink-700)}
+    .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--slb-700);display:inline-block}
+    .legend{display:flex;flex-wrap:wrap;gap:8px}
+    .muted{color:var(--ink-500);font-size:12px}
   </style>
 </head>
 <body>
@@ -101,7 +74,7 @@
 
         <div class="sep"></div>
 
-        <!-- Units quick reference (ECLIPSE_FIELD) -->
+        <!-- Units reference -->
         <div class="legend" aria-label="Units (ECLIPSE_FIELD)">
           <span class="pill"><span class="dot"></span>Pressure: <span class="mono">psi</span></span>
           <span class="pill"><span class="dot"></span>Gas rate: <span class="mono">MSCF/d</span></span>
@@ -111,7 +84,7 @@
 
         <div class="sep"></div>
 
-        <!-- Column headers -->
+        <!-- Header + help -->
         <div class="row row-head">
           <div>Effective Date</div>
           <div>Target</div>
@@ -136,24 +109,22 @@
         <div id="rows"></div>
 
         <div class="sep"></div>
-
         <details open>
           <summary><strong>CSV Preview</strong> <span class="muted">(first 20 lines)</span></summary>
           <pre id="preview" class="mono"></pre>
         </details>
       </section>
 
-      <!-- Right: Help / Hints -->
+      <!-- Right: Help -->
       <aside class="card">
         <h3 style="color:var(--slb-800); margin-top:0;">Tips for fast, correct entry</h3>
         <ul class="muted">
           <li>Use <span class="mono">*</span> to target all wells/sinks; patterns like <span class="mono">PROD*</span> are supported for wells.</li>
-          <li><strong>Well rows</strong> always set a single constraint per column. Add multiple rows if you need multiple constraints on the same date.</li>
+          <li><strong>Well rows</strong> always set a single constraint per column. Add multiple rows if needed on the same date.</li>
           <li><strong>Well Role</strong> writes <span class="mono">Well &lt;pattern&gt; Type</span> on that date. Leave blank if unchanged.</li>
-          <li><strong>NSB rows</strong> can set either a Property (e.g., <span class="mono">Pressure</span>) or a Constraint (e.g., <span class="mono">MAX_PRESSURE</span>).</li>
+          <li><strong>NSB rows</strong> can set a Property (e.g., <span class="mono">Pressure</span>) or a Constraint (e.g., <span class="mono">MAX_PRESSURE</span>).</li>
           <li>For removals, use <span class="mono">#REMOVE</span> as the value.</li>
         </ul>
-
         <h4 style="color:var(--slb-800);">Common keys</h4>
         <div class="muted"><strong>Well</strong> — OIL_PRODUCTION_RATE, WATER_PRODUCTION_RATE, GAS_PRODUCTION_RATE, LIQUID_PRODUCTION_RATE, BOTTOM_HOLE_PRESSURE, TUBING_HEAD_PRESSURE.</div>
         <div class="muted" style="margin-top:6px;"><strong>NSB (constraints)</strong> — MAX_GAS_FLOW_RATE, MAX_LIQUID_FLOW_RATE, MAX_OIL_FLOW_RATE, MAX_PRESSURE, MAX_WATER_FLOW_RATE, MIN_LIQUID_FLOW_RATE, MIN_PRESSURE.</div>
@@ -163,62 +134,44 @@
   </div>
 
   <script>
-  // ===== Stable palette-first logic (unchanged functionality) =====
-  window.addEventListener('DOMContentLoaded', function(){
+  (function(){
     'use strict';
 
+    // Guard: surface any JS error so nothing fails silently.
+    window.addEventListener('error', function(e){ alert('Script error: ' + e.message); });
+
     // Data
-    var WELL_CONSTRAINTS = [
-      'OIL_PRODUCTION_RATE','WATER_PRODUCTION_RATE','GAS_PRODUCTION_RATE','LIQUID_PRODUCTION_RATE',
-      'BOTTOM_HOLE_PRESSURE','TUBING_HEAD_PRESSURE','Custom...'
-    ];
-    var WELL_TYPES = ['', 'PRODUCER','WATER_INJECTOR','GAS_INJECTOR','OIL_INJECTOR'];
+    var WELL_CONSTRAINTS=['OIL_PRODUCTION_RATE','WATER_PRODUCTION_RATE','GAS_PRODUCTION_RATE','LIQUID_PRODUCTION_RATE','BOTTOM_HOLE_PRESSURE','TUBING_HEAD_PRESSURE','Custom...'];
+    var WELL_TYPES=['','PRODUCER','WATER_INJECTOR','GAS_INJECTOR','OIL_INJECTOR'];
+    var NSB_PROPERTIES=['Status','Pressure','Temperature','FlowBasis','GasRate','OilRate','WaterRate','LiquidRate','MassRate','Constraints','Custom...'];
+    var NSB_CONSTRAINTS=['MAX_GAS_FLOW_RATE','MAX_LIQUID_FLOW_RATE','MAX_OIL_FLOW_RATE','MAX_PRESSURE','MAX_WATER_FLOW_RATE','MIN_LIQUID_FLOW_RATE','MIN_PRESSURE','Custom...'];
 
-    var NSB_PROPERTIES = [
-      'Status','Pressure','Temperature','FlowBasis','GasRate','OilRate','WaterRate','LiquidRate','MassRate','Constraints','Custom...'
-    ];
-    var NSB_CONSTRAINTS = [
-      'MAX_GAS_FLOW_RATE','MAX_LIQUID_FLOW_RATE','MAX_OIL_FLOW_RATE','MAX_PRESSURE','MAX_WATER_FLOW_RATE','MIN_LIQUID_FLOW_RATE','MIN_PRESSURE','Custom...'
-    ];
+    // DOM refs
+    var rowsEl, previewEl, startDateEl, btnInit, btnAdd, btnExport, btnClear;
 
-    // DOM
-    var rowsEl = document.getElementById('rows');
-    var previewEl = document.getElementById('preview');
-    var startDateEl = document.getElementById('startDate');
-    var btnInit = document.getElementById('btnInit');
-    var btnAdd = document.getElementById('btnAdd');
-    var btnExport = document.getElementById('btnExport');
-    var btnClear = document.getElementById('btnClear');
-
-    // Helpers
+    // Utils
     function fmtDateDDMMYYYY(iso){ if(!iso) return ''; var p=iso.split('-'); return p.length===3 ? (p[2]+'/'+p[1]+'/'+p[0]) : iso; }
     function csvEscape(s){ if(s==null) return ''; var out=String(s); if(/[",\n]/.test(out)){ out=out.replace(/"/g,'""'); return '"'+out+'"'; } return out; }
-    function make(tag, cls){ var el=document.createElement(tag); if(cls) el.className=cls; return el; }
+    function make(tag,cls){ var el=document.createElement(tag); if(cls) el.className=cls; return el; }
     function fillSelect(sel, items, preset){ sel.innerHTML=''; items.forEach(function(t){ var o=make('option'); o.value=t; o.textContent=(t===''?'—':t); sel.appendChild(o); }); if(preset!=null && items.indexOf(preset)>-1) sel.value=preset; }
 
-    // Rows
+    // Row constructor
     function addRow(dateISO, entity, name, kindVal, key, value, wellType){
-      var row = make('div','row');
+      var row=make('div','row');
 
-      var d = make('input','r-date'); d.type='date'; d.value=dateISO||'';
+      var d=make('input','r-date'); d.type='date'; d.value=dateISO||'';
+      var ent=make('select','r-entity'); ['Well','NetworkSinkBoundary'].forEach(function(x){ var o=make('option'); o.value=x; o.textContent=x; ent.appendChild(o); }); ent.value=entity||'Well';
+      var n=make('input','r-name'); n.type='text'; n.placeholder='Well Name or Sink Name (* = All)'; n.value=(name==null||name==='')?'*':name;
 
-      var ent = make('select','r-entity'); ['Well','NetworkSinkBoundary'].forEach(function(x){ var o=make('option'); o.value=x; o.textContent=x; ent.appendChild(o); }); ent.value=entity||'Well';
-
-      var n = make('input','r-name'); n.type='text'; n.placeholder='Well Name or Sink Name (* = All)'; n.value=(name==null||name==='')?'*':name;
-
-      var kind = make('select','r-kind');
+      var kind=make('select','r-kind');
       function resetKind(){
-        kind.innerHTML = '';
-        if(ent.value==='Well'){
-          var o=make('option'); o.value='cons'; o.textContent='Constraint'; kind.appendChild(o); kind.disabled=true;
-        } else {
-          [['cons','Constraint'],['prop','Property']].forEach(function(x){ var o=make('option'); o.value=x[0]; o.textContent=x[1]; kind.appendChild(o); });
-          kind.disabled=false;
-        }
+        kind.innerHTML='';
+        if(ent.value==='Well'){ var o=make('option'); o.value='cons'; o.textContent='Constraint'; kind.appendChild(o); kind.disabled=true; }
+        else { [['cons','Constraint'],['prop','Property']].forEach(function(x){ var o=make('option'); o.value=x[0]; o.textContent=x[1]; kind.appendChild(o); }); kind.disabled=false; }
       }
       resetKind(); kind.value = kindVal || 'cons';
 
-      var keySel = make('select','r-key');
+      var keySel=make('select','r-key');
       function refillKey(){
         if(ent.value==='Well') fillSelect(keySel, WELL_CONSTRAINTS, key||undefined);
         else if(kind.value==='prop') fillSelect(keySel, NSB_PROPERTIES, key||undefined);
@@ -228,19 +181,19 @@
 
       keySel.addEventListener('change', function(){
         if(ent.value==='Well' && keySel.value==='Custom...'){
-          var label = prompt('Enter custom WELL constraint name:');
+          var label=prompt('Enter custom WELL constraint name:');
           if(label && label.trim()){
-            var val = label.trim();
+            var val=label.trim();
             if(WELL_CONSTRAINTS.indexOf(val)===-1) WELL_CONSTRAINTS.splice(WELL_CONSTRAINTS.length-1,0,val);
             fillSelect(keySel, WELL_CONSTRAINTS, val);
           } else { fillSelect(keySel, WELL_CONSTRAINTS, WELL_CONSTRAINTS[0]); }
         }
         if(ent.value==='NetworkSinkBoundary' && keySel.value==='Custom...'){
-          var which = prompt('Type C for Constraint or P for Property');
-          var label2 = prompt('Enter custom name:');
+          var which=prompt('Type C for Constraint or P for Property');
+          var label2=prompt('Enter custom name:');
           if(label2 && label2.trim()){
-            var v = label2.trim();
-            if(which && (which.toUpperCase()==='P')){ if(NSB_PROPERTIES.indexOf(v)===-1) NSB_PROPERTIES.splice(NSB_PROPERTIES.length-1,0,v); kind.value='prop'; }
+            var v=label2.trim();
+            if(which && which.toUpperCase()==='P'){ if(NSB_PROPERTIES.indexOf(v)===-1) NSB_PROPERTIES.splice(NSB_PROPERTIES.length-1,0,v); kind.value='prop'; }
             else { if(NSB_CONSTRAINTS.indexOf(v)===-1) NSB_CONSTRAINTS.splice(NSB_CONSTRAINTS.length-1,0,v); kind.value='cons'; }
             refillKey(); keySel.value=v;
           } else { refillKey(); }
@@ -248,11 +201,9 @@
         renderPreview();
       });
 
-      var v = make('input','r-value'); v.type='text'; v.placeholder='Constraint or Property value, unit per ECLIPSE_FIELD'; v.value=value||'';
-
-      var wType = make('select','r-welltype'); fillSelect(wType, WELL_TYPES, (wellType==null?'':wellType));
-
-      var del = make('button','r-del'); del.type='button'; del.textContent='🗑 Remove';
+      var v=make('input','r-value'); v.type='text'; v.placeholder='Constraint or Property value, unit per ECLIPSE_FIELD'; v.value=value||'';
+      var wType=make('select','r-welltype'); fillSelect(wType, WELL_TYPES, (wellType==null?'':wellType));
+      var del=make('button','r-del'); del.type='button'; del.textContent='🗑 Remove';
 
       function applyVisibility(){ wType.classList.toggle('hide', ent.value!=='Well'); }
       applyVisibility();
@@ -267,73 +218,80 @@
       renderPreview();
     }
 
-    // CSV (group by date+context)
+    // CSV builder
     function buildCSV(){
-      var entries=[];
-      var rs = rowsEl.querySelectorAll('.row');
+      var entries=[]; var rs=rowsEl.querySelectorAll('.row');
       for(var i=0;i<rs.length;i++){
-        var r = rs[i];
-        var dateISO = r.querySelector('.r-date').value; if(!dateISO) continue;
-        var entity = r.querySelector('.r-entity').value;
-        var name = (r.querySelector('.r-name').value.trim()||'*');
-        var kind = r.querySelector('.r-kind').value; // 'cons' or 'prop'
-        var key = r.querySelector('.r-key').value.trim();
-        var val = r.querySelector('.r-value').value.trim();
-        var wtype = r.querySelector('.r-welltype').value; // may be ''
-        entries.push({dateISO:dateISO, entity:entity, name:name, kind:kind, key:key, val:val, wtype:wtype});
+        var r=rs[i];
+        var dateISO=r.querySelector('.r-date'); if(!dateISO) continue;
+        var dval=dateISO.value; if(!dval) continue;
+        var entity=r.querySelector('.r-entity').value;
+        var name=(r.querySelector('.r-name').value.trim()||'*');
+        var kind=r.querySelector('.r-kind').value;
+        var key=r.querySelector('.r-key').value.trim();
+        var val=r.querySelector('.r-value').value.trim();
+        var wtype=r.querySelector('.r-welltype').value;
+        entries.push({dateISO:dval,entity:entity,name:name,kind:kind,key:key,val:val,wtype:wtype});
       }
       if(!entries.length) return '';
 
-      var groups = new Map();
-      function ensureGroup(gid, dateKey){ if(!groups.has(gid)) groups.set(gid, {dateKey:dateKey, map:new Map([["DATE", dateKey]])}); return groups.get(gid).map; }
-
+      var groups=new Map();
+      function ensureGroup(gid,dateKey){ if(!groups.has(gid)) groups.set(gid,{dateKey:dateKey,map:new Map([['DATE',dateKey]])}); return groups.get(gid).map; }
       function dateKeyOf(iso){ return fmtDateDDMMYYYY(iso); }
 
       entries.forEach(function(e){
-        var dkey = dateKeyOf(e.dateISO);
-        var gid, map;
+        var dkey=dateKeyOf(e.dateISO), gid, map;
         if(e.entity==='Well'){
-          var t = e.wtype || 'NONE';
-          gid = 'DATE='+dkey+'|Well|TYPE='+t+'|NAME='+e.name;
-          map = ensureGroup(gid, dkey);
+          var t=e.wtype||'NONE';
+          gid='DATE='+dkey+'|Well|TYPE='+t+'|NAME='+e.name;
+          map=ensureGroup(gid,dkey);
           if(e.wtype){ map.set('Well '+e.name+' Type', e.wtype); }
-          map.set('Well '+e.name+' Constraints:'+e.key, e.val || '');
+          map.set('Well '+e.name+' Constraints:'+e.key, e.val||'');
         } else {
-          gid = 'DATE='+dkey+'|NSB|NAME='+e.name;
-          map = ensureGroup(gid, dkey);
-          if(e.kind==='prop') map.set('NetworkSinkBoundary '+e.name+' '+e.key, e.val || '');
-          else map.set('NetworkSinkBoundary '+e.name+' Constraints:'+e.key, e.val || '');
+          gid='DATE='+dkey+'|NSB|NAME='+e.name;
+          map=ensureGroup(gid,dkey);
+          if(e.kind==='prop') map.set('NetworkSinkBoundary '+e.name+' '+e.key, e.val||'');
+          else map.set('NetworkSinkBoundary '+e.name+' Constraints:'+e.key, e.val||'');
         }
       });
 
-      var headers = new Set(['DATE']);
+      var headers=new Set(['DATE']);
       groups.forEach(function(obj){ obj.map.forEach(function(_,h){ headers.add(h); }); });
-      var cols = Array.from(headers);
+      var cols=Array.from(headers);
 
-      var rowsArr = Array.from(groups.entries()).map(function(x){ return {gid:x[0], dateKey:x[1].dateKey, map:x[1].map}; }).sort(function(a,b){
-        var A=a.dateKey.split('/'); var B=b.dateKey.split('/'); var t = new Date(A[2],A[1]-1,A[0]) - new Date(B[2],B[1]-1,B[0]);
-        if (t!==0) return t; return a.gid.localeCompare(b.gid);
+      var rowsArr=Array.from(groups.entries()).map(function(x){return{gid:x[0],dateKey:x[1].dateKey,map:x[1].map};}).sort(function(a,b){
+        var A=a.dateKey.split('/'); var B=b.dateKey.split('/'); var t=new Date(A[2],A[1]-1,A[0]) - new Date(B[2],B[1]-1,B[0]);
+        if(t!==0) return t; return a.gid.localeCompare(b.gid);
       });
 
       var lines=[]; lines.push(cols.map(csvEscape).join(','));
       rowsArr.forEach(function(r){ var out=[]; cols.forEach(function(h){ out.push(csvEscape(r.map.get(h)||'')); }); lines.push(out.join(',')); });
       return lines.join('\n');
     }
+    function renderPreview(){ var csv=buildCSV(); previewEl.textContent = csv ? csv.split('\n').slice(0,20).join('\n') : ''; }
+    function download(name,text){ var blob=new Blob([text],{type:'text/csv;charset=utf-8'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
 
-    function renderPreview(){ var csv = buildCSV(); previewEl.textContent = csv ? csv.split('\n').slice(0,20).join('\n') : ''; }
-    function download(name, text){ var blob=new Blob([text],{type:'text/csv;charset=utf-8'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+    // Init
+    function boot(){
+      rowsEl=document.getElementById('rows');
+      previewEl=document.getElementById('preview');
+      startDateEl=document.getElementById('startDate');
+      btnInit=document.getElementById('btnInit');
+      btnAdd=document.getElementById('btnAdd');
+      btnExport=document.getElementById('btnExport');
+      btnClear=document.getElementById('btnClear');
 
-    // Buttons
-    btnInit.addEventListener('click', function(){ var d=startDateEl.value; if(!d){ alert('Pick an effective date'); return; } rowsEl.innerHTML=''; addRow(d,'Well','*','cons','OIL_PRODUCTION_RATE','', ''); });
-    btnAdd.addEventListener('click', function(){ var d=startDateEl.value || new Date().toISOString().slice(0,10); addRow(d,'Well','*','cons','OIL_PRODUCTION_RATE','', ''); });
-    btnExport.addEventListener('click', function(){ var csv=buildCSV(); if(!csv){ alert('No rows to export'); return; } download('case_Constraints.csv', csv); });
-    btnClear.addEventListener('click', function(){ rowsEl.innerHTML=''; previewEl.textContent=''; });
+      var todayISO=new Date().toISOString().slice(0,10);
+      startDateEl.value=todayISO;
+      addRow(todayISO,'Well','*','cons','OIL_PRODUCTION_RATE','', '');
 
-    // Boot
-    var todayISO = new Date().toISOString().slice(0,10);
-    startDateEl.value = todayISO;
-    addRow(todayISO,'Well','*','cons','OIL_PRODUCTION_RATE','', '');
-  });
+      btnInit.addEventListener('click',function(){ var d=startDateEl.value; if(!d){alert('Pick an effective date');return;} rowsEl.innerHTML=''; addRow(d,'Well','*','cons','OIL_PRODUCTION_RATE','', ''); });
+      btnAdd.addEventListener('click',function(){ var d=startDateEl.value||todayISO; addRow(d,'Well','*','cons','OIL_PRODUCTION_RATE','', ''); });
+      btnExport.addEventListener('click',function(){ var csv=buildCSV(); if(!csv){alert('No rows to export');return;} download('case_Constraints.csv',csv); });
+      btnClear.addEventListener('click',function(){ rowsEl.innerHTML=''; previewEl.textContent=''; });
+    }
+    document.addEventListener('DOMContentLoaded', boot);
+  })();
   </script>
 </body>
 </html>
