@@ -18,19 +18,17 @@
       background:var(--slb-100);color:var(--ink-900)
     }
 
-    /* Cap overall width */
-    .page{max-width:1200px;margin:0 auto;padding:0 16px}
+    /* ↑ Cap widened so Target(+25%) and Key(+33%) fit left pane without h-scroll */
+    .page{max-width:1560px;margin:0 auto;padding:0 16px}
 
     h1{margin:0 0 4px;color:var(--slb-800);font-weight:800;letter-spacing:.2px;font-size:18px}
     .subtitle{color:var(--ink-500);font-size:11.5px;margin-bottom:12px}
 
-    /* Two columns; stack on smaller screens */
     .grid{display:grid;gap:16px;grid-template-columns:1fr 360px;align-items:start}
     @media (max-width:1024px){.grid{grid-template-columns:1fr}}
 
     .card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--white);box-shadow:0 1px 0 rgba(0,0,0,.02)}
 
-    /* Controls — smaller to match compact UI */
     input,select,button{padding:6px 8px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:#fff}
     input:focus,select:focus,button:focus{outline:2px solid var(--slb-600);outline-offset:2px}
     label{font-size:11px;color:var(--ink-700)}
@@ -39,14 +37,12 @@
     .toolbar .btn:hover{background:var(--slb-700);cursor:pointer}
     .sep{height:1px;background:var(--line);margin:12px 0}
 
-    /* Horizontal scroll for the rows only */
     .table-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:4px}
 
-    /* Fixed column widths — after removing “What to Set” */
-    /* Columns: Date | Target | Name | Key | Value | WellRole | Action */
+    /* Columns: Date | Target(+25%) | Name | Key(+33%) | Value | WellRole | Action */
     .row{
       display:grid;
-      grid-template-columns:130px 130px 150px 160px 180px 140px 88px;
+      grid-template-columns:130px 162px 150px 214px 180px 140px 88px;
       gap:8px;margin-bottom:8px;align-items:center
     }
     .row > *{min-width:0}
@@ -60,7 +56,16 @@
     .row input[type="date"]{font-variant-numeric:tabular-nums}
     .r-key{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    /* Well Role placeholder (keeps alignment when NSB) */
+    /* Smaller font just for the 3 dropdowns (values the user sees) */
+    .row select.r-entity,
+    .row select.r-key,
+    .row select.r-welltype{font-size:12px;padding:4px 6px}
+    .row select.r-entity option,
+    .row select.r-key option,
+    .row select.r-welltype option{font-size:12px}
+    .row select.r-key optgroup{font-size:12px;font-style:normal}
+
+    /* Well Role placeholder keeps alignment on NSB */
     .r-role-cell{display:flex}
     .fake-field{
       width:100%;display:flex;align-items:center;justify-content:center;
@@ -86,7 +91,6 @@
     </header>
 
     <div class="grid">
-      <!-- Left: Builder -->
       <section class="card">
         <div class="toolbar">
           <div>
@@ -110,7 +114,6 @@
 
         <div class="sep"></div>
 
-        <!-- TABLE (h-scroll only) -->
         <div class="table-scroll">
           <div class="row row-head">
             <div>Effective Date</div>
@@ -141,7 +144,6 @@
         </details>
       </section>
 
-      <!-- Right: Help -->
       <aside class="card">
         <h3 style="color:var(--slb-800); margin-top:0; font-size:15px;">Tips for fast, correct entry</h3>
         <ul class="muted">
@@ -278,7 +280,6 @@
       [d,ent,n,v,wType].forEach(function(inp){ inp.addEventListener('input', renderPreview); });
       del.addEventListener('click', function(){ row.remove(); renderPreview(); });
 
-      // Append in 7-column order
       row.appendChild(d); row.appendChild(ent); row.appendChild(n); row.appendChild(keySel); row.appendChild(v); row.appendChild(roleCell); row.appendChild(del);
       rowsEl.appendChild(row);
       renderPreview();
