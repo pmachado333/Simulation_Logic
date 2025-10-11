@@ -32,14 +32,16 @@
     /* Columns: Date | Target | Name | What | Key | Value | WellType | Action */
     .row{
       display:grid;
-      grid-template-columns: 110px 120px 140px 120px minmax(280px,1fr) minmax(180px,1fr) 160px 96px;
+      grid-template-columns: 160px 130px 150px 120px minmax(200px,1fr) 140px 160px 96px;
       gap:8px;margin-bottom:8px;align-items:center
     }
-    .row > *{min-width:0} /* critical to stop overflow */
+    .row > *{min-width:0} /* stop overflow */
     .row-head{font-weight:700;color:var(--slb-900)}
     .row-help{font-size:12px;color:var(--ink-500)}
     .row-help>div{padding:2px 0}
     .row input,.row select{width:100%}
+    /* Make date digits readable and ensure full date shows */
+    .row input[type="date"]{font-variant-numeric: tabular-nums;}
 
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
     pre{white-space:pre-wrap}
