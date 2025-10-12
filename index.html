@@ -1,4 +1,4 @@
-<!-- file: index.html -->
+<!-- file: /mnt/data/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -81,6 +81,10 @@
     .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--slb-700);display:inline-block}
     .legend{display:flex;flex-wrap:wrap;gap:8px}
     .muted{color:var(--ink-500);font-size:11.5px}
+
+    /* New: compact info note before table */
+    .note{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#f9fbff}
+    .note-title{margin:0 0 4px;color:var(--slb-800);font-weight:700;font-size:13px}
   </style>
 </head>
 <body>
@@ -105,11 +109,28 @@
 
         <div class="sep"></div>
 
+        <!-- Units legend: now explicitly flagged as ECLIPSE_FIELD -->
         <div class="legend" aria-label="Units (ECLIPSE_FIELD)">
+          <span class="pill"><strong>ECLIPSE_FIELD units</strong></span>
           <span class="pill"><span class="dot"></span>Pressure: <span class="mono">psi</span></span>
           <span class="pill"><span class="dot"></span>Gas rate: <span class="mono">MSCF/d</span></span>
           <span class="pill"><span class="dot"></span>Liquid rate: <span class="mono">STB/d</span></span>
           <span class="pill"><span class="dot"></span>Temperature: <span class="mono">°F</span></span>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- New: brief explanation before the input table -->
+        <div class="note" role="note" aria-label="How constraints are applied">
+          <div class="note-title">How constraints in this file are applied</div>
+          <div class="muted">
+            The rows below define date-effective operating constraints used by field management to control individual
+            <strong>Wells</strong> and the terminal network node <span class="mono">NetworkSinkBoundary</span>
+            (<strong>NSB</strong>). NSB is the last node of the simulation. Offshore cases typically map this to the
+            <strong>FPSO</strong>. For Wells, each row sets a single constraint and can optionally change the well role
+            on that date. For NSB, pick either a <em>Property</em> (e.g., Pressure) or a <em>Constraint</em>
+            (e.g., MAX_GAS_FLOW_RATE). Use <span class="mono">#REMOVE</span> to clear a previously set value.
+          </div>
         </div>
 
         <div class="sep"></div>
@@ -147,6 +168,7 @@
       <aside class="card">
         <h3 style="color:var(--slb-800); margin-top:0; font-size:15px;">Tips for fast, correct entry</h3>
         <ul class="muted">
+          <li><strong>NSB</strong> = <span class="mono">NetworkSinkBoundary</span> — the last node of the simulation (offshore: usually the FPSO).</li>
           <li>Use <span class="mono">*</span> to target all wells/sinks; patterns like <span class="mono">PROD*</span> are supported for wells.</li>
           <li><strong>Well rows</strong> set a single constraint per row.</li>
           <li><strong>Well Role</strong> writes <span class="mono">Well &lt;pattern&gt; Type</span> on that date. Leave blank if unchanged.</li>
@@ -155,6 +177,7 @@
         </ul>
         <h4 style="color:var(--slb-800); font-size:14px;">Common keys</h4>
         <div class="muted"><strong>Well</strong> — OIL_PRODUCTION_RATE, WATER_PRODUCTION_RATE, GAS_PRODUCTION_RATE, LIQUID_PRODUCTION_RATE, BOTTOM_HOLE_PRESSURE, TUBING_HEAD_PRESSURE.</div>
+        <div class="muted" style="margin-top:6px;"><em>NSB = NetworkSinkBoundary (last node / FPSO)</em></div>
         <div class="muted" style="margin-top:6px;"><strong>NSB (constraints)</strong> — MAX_GAS_FLOW_RATE, MAX_LIQUID_FLOW_RATE, MAX_OIL_FLOW_RATE, MAX_PRESSURE, MAX_WATER_FLOW_RATE, MIN_LIQUID_FLOW_RATE, MIN_PRESSURE.</div>
         <div class="muted" style="margin-top:6px;"><strong>NSB (properties)</strong> — Status, Pressure, Temperature, FlowBasis, GasRate, OilRate, WaterRate, LiquidRate, MassRate, Constraints.</div>
       </aside>
@@ -347,7 +370,7 @@
 
     function renderPreview(){
       var csv=buildCSV();
-      previewEl.textContent = csv ? csv.split('\n').slice(0,20).join('\n') : '';
+      document.getElementById('preview').textContent = csv ? csv.split('\n').slice(0,20).join('\n') : '';
     }
 
     function download(name,text){
@@ -360,7 +383,6 @@
     // Init
     function boot(){
       rowsEl=document.getElementById('rows');
-      previewEl=document.getElementById('preview');
       startDateEl=document.getElementById('startDate');
 
       var btnInit=document.getElementById('btnInit');
@@ -382,7 +404,7 @@
       btnExport.addEventListener('click',function(){
         var csv=buildCSV(); if(!csv){alert('No rows to export');return;} download('case_Constraints.csv',csv);
       });
-      btnClear.addEventListener('click',function(){ rowsEl.innerHTML=''; previewEl.textContent=''; });
+      btnClear.addEventListener('click',function(){ rowsEl.innerHTML=''; document.getElementById('preview').textContent=''; });
     }
     document.addEventListener('DOMContentLoaded', boot);
   })();
