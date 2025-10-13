@@ -17,18 +17,12 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";
       background:var(--slb-100);color:var(--ink-900)
     }
-
-    /* ↑ Cap widened so Target(+25%) and Key(+33%) fit left pane without h-scroll */
     .page{max-width:1560px;margin:0 auto;padding:0 16px}
-
     h1{margin:0 0 4px;color:var(--slb-800);font-weight:800;letter-spacing:.2px;font-size:18px}
     .subtitle{color:var(--ink-500);font-size:11.5px;margin-bottom:12px}
-
     .grid{display:grid;gap:16px;grid-template-columns:1fr 360px;align-items:start}
     @media (max-width:1024px){.grid{grid-template-columns:1fr}}
-
     .card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--white);box-shadow:0 1px 0 rgba(0,0,0,.02)}
-
     input,select,button{padding:6px 8px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:#fff}
     input:focus,select:focus,button:focus{outline:2px solid var(--slb-600);outline-offset:2px}
     label{font-size:11px;color:var(--ink-700)}
@@ -36,10 +30,7 @@
     .toolbar .btn{background:var(--slb-800);color:#fff;border:none;font-weight:600}
     .toolbar .btn:hover{background:var(--slb-700);cursor:pointer}
     .sep{height:1px;background:var(--line);margin:12px 0}
-
     .table-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:4px}
-
-    /* Columns: Date | Target(+25%) | Name | Key(+33%) | Value | WellRole | Action */
     .row{
       display:grid;
       grid-template-columns:130px 162px 150px 214px 180px 140px 88px;
@@ -55,34 +46,22 @@
     .row input,.row select{width:100%}
     .row input[type="date"]{font-variant-numeric:tabular-nums}
     .r-key{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-    /* Smaller font just for the 3 dropdowns (values the user sees) */
-    .row select.r-entity,
-    .row select.r-key,
-    .row select.r-welltype{font-size:12px;padding:4px 6px}
-    .row select.r-entity option,
-    .row select.r-key option,
-    .row select.r-welltype option{font-size:12px}
+    .row select.r-entity,.row select.r-key,.row select.r-welltype{font-size:12px;padding:4px 6px}
+    .row select.r-entity option,.row select.r-key option,.row select.r-welltype option{font-size:12px}
     .row select.r-key optgroup{font-size:12px;font-style:normal}
-
-    /* Well Role placeholder keeps alignment on NSB */
     .r-role-cell{display:flex}
     .fake-field{
       width:100%;display:flex;align-items:center;justify-content:center;
       border-radius:10px;border:1px solid var(--ink-600);
       background:var(--ink-700);color:#fff;font-size:12px;padding:6px 8px;user-select:none
     }
-
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
     pre{white-space:pre-wrap;font-size:12px}
     .hide{display:none!important}
-
     .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:11px;color:var(--ink-700)}
     .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--slb-700);display:inline-block}
     .legend{display:flex;flex-wrap:wrap;gap:8px}
     .muted{color:var(--ink-500);font-size:11.5px}
-
-    /* New: compact info note before table */
     .note{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#f9fbff}
     .note-title{margin:0 0 4px;color:var(--slb-800);font-weight:700;font-size:13px}
   </style>
@@ -109,7 +88,6 @@
 
         <div class="sep"></div>
 
-        <!-- Units legend: now explicitly flagged as ECLIPSE_FIELD -->
         <div class="legend" aria-label="Units (ECLIPSE_FIELD)">
           <span class="pill"><strong>ECLIPSE_FIELD units</strong></span>
           <span class="pill"><span class="dot"></span>Pressure: <span class="mono">psi</span></span>
@@ -120,13 +98,12 @@
 
         <div class="sep"></div>
 
-        <!-- New: brief explanation before the input table -->
         <div class="note" role="note" aria-label="How constraints are applied">
           <div class="note-title">How constraints in this file are applied</div>
           <div class="muted">
             The rows below define date-effective operating constraints used by field management to control individual
             <strong>Wells</strong> and the terminal network node <span class="mono">NetworkSinkBoundary</span>
-            (<strong>NSB</strong>). NSB is the last node of the simulation. Offshore cases typically map this to the
+            (<strong>NSB</strong>). NSB is the last node of the simulation, offshore cases typically map this to the
             <strong>FPSO</strong>. For Wells, each row sets a single constraint and can optionally change the well role
             on that date. For NSB, pick either a <em>Property</em> (e.g., Pressure) or a <em>Constraint</em>
             (e.g., MAX_GAS_FLOW_RATE). Use <span class="mono">#REMOVE</span> to clear a previously set value.
@@ -146,7 +123,7 @@
             <div>Action</div>
           </div>
           <div class="row row-help">
-            <div>DD/MM/YYYY</div>
+            <div>MM/DD/YYYY</div>
             <div>Well or NetworkSinkBoundary</div>
             <div>Well Name or Sink Name (<span class="mono">* = All</span>)</div>
             <div>Pick from Properties or Constraints</div>
@@ -202,7 +179,7 @@
     var rowsEl, previewEl, startDateEl;
 
     // Utils
-    function fmtDateDDMMYYYY(iso){ if(!iso) return ''; var p=iso.split('-'); return p.length===3 ? (p[2]+'/'+p[1]+'/'+p[0]) : iso; }
+    function fmtDateMMDDYYYY(iso){ if(!iso) return ''; var p=iso.split('-'); return p.length===3 ? (p[1]+'/'+p[2]+'/'+p[0]) : iso; }
     function csvEscape(s){ if(s==null) return ''; var out=String(s); if(/[",\n]/.test(out)){ out=out.replace(/"/g,'""'); return '"'+out+'"'; } return out; }
     function make(tag,cls){ var el=document.createElement(tag); if(cls) el.className=cls; return el; }
     function withoutCustom(arr){ return arr.filter(function(x){ return x!=='Custom...'; }); }
@@ -336,7 +313,7 @@
 
       var groups=new Map();
       function ensureGroup(gid,dateKey){ if(!groups.has(gid)) groups.set(gid,{dateKey:dateKey,map:new Map([['DATE',dateKey]])}); return groups.get(gid).map; }
-      function dateKeyOf(iso){ return fmtDateDDMMYYYY(iso); }
+      function dateKeyOf(iso){ return fmtDateMMDDYYYY(iso); }
 
       entries.forEach(function(e){
         var dkey=dateKeyOf(e.dateISO), gid, map;
@@ -359,7 +336,9 @@
       var cols=Array.from(headers);
 
       var rowsArr=Array.from(groups.entries()).map(function(x){return{gid:x[0],dateKey:x[1].dateKey,map:x[1].map};}).sort(function(a,b){
-        var A=a.dateKey.split('/'); var B=b.dateKey.split('/'); var t=new Date(A[2],A[1]-1,A[0]) - new Date(B[2],B[1]-1,B[0]);
+        // MM/DD/YYYY -> year=A[2], month=A[0], day=A[1]
+        var A=a.dateKey.split('/'); var B=b.dateKey.split('/');
+        var t=new Date(A[2],A[0]-1,A[1]) - new Date(B[2],B[0]-1,B[1]);
         if(t!==0) return t; return a.gid.localeCompare(b.gid);
       });
 
@@ -380,7 +359,6 @@
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     }
 
-    // Init
     function boot(){
       rowsEl=document.getElementById('rows');
       startDateEl=document.getElementById('startDate');
