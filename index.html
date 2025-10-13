@@ -1,4 +1,4 @@
-<!-- file: /mnt/data/index.html -->
+<!-- file: /mnt/data/index_mmdd_v2.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,7 +26,7 @@
     input,select,button{padding:6px 8px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:#fff}
     input:focus,select:focus,button:focus{outline:2px solid var(--slb-600);outline-offset:2px}
     label{font-size:11px;color:var(--ink-700)}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .toolbar .btn{background:var(--slb-800);color:#fff;border:none;font-weight:600}
     .toolbar .btn:hover{background:var(--slb-700);cursor:pointer}
     .sep{height:1px;background:var(--line);margin:12px 0}
@@ -64,6 +64,7 @@
     .muted{color:var(--ink-500);font-size:11.5px}
     .note{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#f9fbff}
     .note-title{margin:0 0 4px;color:var(--slb-800);font-weight:700;font-size:13px}
+    .label-subtle{font-size:10px;color:var(--ink-500)}
   </style>
 </head>
 <body>
@@ -78,7 +79,8 @@
         <div class="toolbar">
           <div>
             <label for="startDate">Effective Date</label><br />
-            <input id="startDate" type="date" />
+            <input id="startDate" type="date" aria-describedby="fmtHint" />
+            <div id="fmtHint" class="label-subtle">Format: MM/DD/YYYY</div>
           </div>
           <button id="btnInit" type="button" class="btn">Initialize First Row</button>
           <button id="btnAdd" type="button" class="btn">+ Add Row</button>
@@ -220,7 +222,10 @@
     function addRow(dateISO, entity, name, key, value, wellType){
       var row=make('div','row');
 
+      // date cell (single input only)
       var d=make('input','r-date'); d.type='date'; d.value=dateISO||'';
+      d.addEventListener('input', function(){ renderPreview(); });
+
       var ent=make('select','r-entity'); ['Well','NetworkSinkBoundary'].forEach(function(x){ var o=make('option'); o.value=x; o.textContent=x; ent.appendChild(o); }); ent.value=entity||'Well';
       var n=make('input','r-name'); n.type='text'; n.placeholder='Well Name or Sink Name (* = All)'; n.value=(name==null||name==='')?'*':name;
 
@@ -277,7 +282,7 @@
       applyVisibility();
 
       ent.addEventListener('change', function(){ refillKey(); applyVisibility(); renderPreview(); });
-      [d,ent,n,v,wType].forEach(function(inp){ inp.addEventListener('input', renderPreview); });
+      [ent,n,v,wType].forEach(function(inp){ inp.addEventListener('input', renderPreview); });
       del.addEventListener('click', function(){ row.remove(); renderPreview(); });
 
       row.appendChild(d); row.appendChild(ent); row.appendChild(n); row.appendChild(keySel); row.appendChild(v); row.appendChild(roleCell); row.appendChild(del);
@@ -370,6 +375,7 @@
 
       var todayISO=new Date().toISOString().slice(0,10);
       startDateEl.value=todayISO;
+
       addRow(todayISO,'Well','*','OIL_PRODUCTION_RATE','', '');
 
       btnInit.addEventListener('click',function(){
