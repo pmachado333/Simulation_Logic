@@ -168,7 +168,7 @@
     'use strict';
     window.addEventListener('error', function(e){ alert('Script error: ' + e.message); });
 
-    // Data
+    // Data I maintain
     var WELL_CONSTRAINTS=[
       'OIL_PRODUCTION_RATE','WATER_PRODUCTION_RATE','GAS_PRODUCTION_RATE',
       'LIQUID_PRODUCTION_RATE','BOTTOM_HOLE_PRESSURE','TUBING_HEAD_PRESSURE','Custom...'
@@ -177,10 +177,10 @@
     var NSB_PROPERTIES=['Status','Pressure','Temperature','FlowBasis','GasRate','OilRate','WaterRate','LiquidRate','MassRate','Constraints','Custom...'];
     var NSB_CONSTRAINTS=['MAX_GAS_FLOW_RATE','MAX_LIQUID_FLOW_RATE','MAX_OIL_FLOW_RATE','MAX_PRESSURE','MAX_WATER_FLOW_RATE','MIN_LIQUID_FLOW_RATE','MIN_PRESSURE','Custom...'];
 
-    // DOM refs
+    // DOM refs I reuse
     var rowsEl, previewEl, startDateEl;
 
-    // Utils
+    // Utilities I use
     function fmtDateMMDDYYYY(iso){ if(!iso) return ''; var p=iso.split('-'); return p.length===3 ? (p[1]+'/'+p[2]+'/'+p[0]) : iso; }
     function csvEscape(s){ if(s==null) return ''; var out=String(s); if(/[",\n]/.test(out)){ out=out.replace(/"/g,'""'); return '"'+out+'"'; } return out; }
     function make(tag,cls){ var el=document.createElement(tag); if(cls) el.className=cls; return el; }
@@ -218,18 +218,18 @@
       if(preset){ sel.value=preset; }
     }
 
-    // Row constructor
+    // Row constructor I use
     function addRow(dateISO, entity, name, key, value, wellType){
       var row=make('div','row');
 
-      // date cell (single input only)
+      
       var d=make('input','r-date'); d.type='date'; d.value=dateISO||'';
       d.addEventListener('input', function(){ renderPreview(); });
 
       var ent=make('select','r-entity'); ['Well','NetworkSinkBoundary'].forEach(function(x){ var o=make('option'); o.value=x; o.textContent=x; ent.appendChild(o); }); ent.value=entity||'Well';
       var n=make('input','r-name'); n.type='text'; n.placeholder='Well Name or Sink Name (* = All)'; n.value=(name==null||name==='')?'*':name;
 
-      // Key (Constraint or Property in one select)
+      // I combine property and constraint in one select
       var keySel=make('select','r-key r-key-nsb');
       function refillKey(){
         if(ent.value==='Well') fillSelectWellConstraints(keySel, key||undefined);
@@ -262,7 +262,7 @@
 
       var v=make('input','r-value'); v.type='text'; v.placeholder='Constraint or Property value, unit per ECLIPSE_FIELD'; v.value=value||'';
 
-      // Column #6 (Well Role cell): contains BOTH real select and dark placeholder
+      // Column 6: I show a real select for wells and a placeholder for NSB
       var roleCell = make('div','r-role-cell');
       var wType=make('select','r-welltype');
       ['','PRODUCER','WATER_INJECTOR','GAS_INJECTOR','OIL_INJECTOR'].forEach(function(t){ var o=make('option'); o.value=t; o.textContent=(t===''?'—':t); wType.appendChild(o); });
@@ -276,8 +276,8 @@
 
       function applyVisibility(){
         var isWell = (ent.value==='Well');
-        wType.classList.toggle('hide', !isWell);            // show select only for Well
-        rolePlaceholder.classList.toggle('hide', isWell);   // show dark placeholder for NSB
+        wType.classList.toggle('hide', !isWell);            
+        rolePlaceholder.classList.toggle('hide', isWell);   
       }
       applyVisibility();
 
@@ -290,7 +290,7 @@
       renderPreview();
     }
 
-    // CSV builder
+    // CSV builder I rely on
     function buildCSV(){
       var entries=[]; var rs=rowsEl.querySelectorAll('.row');
       for(var i=0;i<rs.length;i++){
@@ -341,7 +341,7 @@
       var cols=Array.from(headers);
 
       var rowsArr=Array.from(groups.entries()).map(function(x){return{gid:x[0],dateKey:x[1].dateKey,map:x[1].map};}).sort(function(a,b){
-        // MM/DD/YYYY -> year=A[2], month=A[0], day=A[1]
+        // I sort by date (MM/DD/YYYY): year=A[2], month=A[0], day=A[1]
         var A=a.dateKey.split('/'); var B=b.dateKey.split('/');
         var t=new Date(A[2],A[0]-1,A[1]) - new Date(B[2],B[0]-1,B[1]);
         if(t!==0) return t; return a.gid.localeCompare(b.gid);
